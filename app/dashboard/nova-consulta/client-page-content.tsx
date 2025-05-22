@@ -7,6 +7,8 @@ import { createBrowserClient } from "@/lib/supabase-browser"
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
+import { SelectContent, SelectItem, SelectTrigger, SelectValue, Select } from "@/components/ui/select"
+import { FormControl } from "@/components/ui/form"
 
 interface Platform {
   id: string;
@@ -15,11 +17,37 @@ interface Platform {
   slug: string;
 }
 
+interface PlataformTool {
+  id: string;
+  name: string;
+  plataform: string;
+  description: string;
+  type?: 'page' | 'url';
+  gemas: number;
+}
+
+// Definindo a interface para um perfil no estado do formulário
+interface ProfileState {
+  id: string;
+  username: string;
+  name?: string;
+  avatar?: string;
+  seguidores?: number;
+  seguindo?: number;
+  platform_slug?: string; // Adicionar slug da plataforma para fácil acesso
+  full_name?: string;
+  profile_pic_url?: string;
+  followers_count?: number;
+  "followsCount"?: number;
+  platform?: string;
+}
+
 // Remover export const metadata
 
 interface ClientPageContentProps {
   platforms: Platform[];
-  plataformTools: any[]; // Ajustar tipo conforme necessário
+  plataformTools: PlataformTool[]; // Ajustar tipo conforme necessário
+  availableTokens: number; // Adicionar prop para tokens disponíveis
 }
 
 // Definir a interface para os dados do resumo
@@ -29,12 +57,26 @@ interface SummaryData {
   estimatedTime: string;
   costPerResult: number;
   totalCost: number;
+  availableTokens: number; // Adicionar tokens disponíveis ao resumo
 }
 
-export default function ClientPageContent({ platforms, plataformTools }: ClientPageContentProps) {
+interface NovaConsultaFormProps {
+  platforms: Platform[];
+  plataformTools: PlataformTool[];
+  onPlatformSelect: (platform: Platform | undefined) => void;
+  onExtractionTypeSelect: (type: string | undefined) => void;
+  selectedProfiles: ProfileState[];
+  setSelectedProfiles: React.Dispatch<React.SetStateAction<ProfileState[]>>;
+  expectedResults: string;
+  setExpectedResults: React.Dispatch<React.SetStateAction<string>>;
+  onSummaryUpdate: (summaryData: SummaryData) => void;
+  onIniciarConsulta: (periodo: string, periodoUnit: string, resultadosEsperados: string, urlValue: string) => Promise<void>;
+}
+
+export default function ClientPageContent({ platforms, plataformTools, availableTokens }: ClientPageContentProps) {
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | undefined>(undefined);
   const [selectedExtractionType, setSelectedExtractionType] = useState<string | undefined>(undefined);
-  const [selectedProfiles, setSelectedProfiles] = useState<any[]>([]);
+  const [selectedProfiles, setSelectedProfiles] = useState<ProfileState[]>([]);
   const [expectedResults, setExpectedResults] = useState<string>("0");
   // Novo estado para armazenar os dados do resumo
   const [summaryData, setSummaryData] = useState<SummaryData>({
@@ -43,24 +85,29 @@ export default function ClientPageContent({ platforms, plataformTools }: ClientP
     estimatedTime: "",
     costPerResult: 0,
     totalCost: 0,
+    availableTokens: 0,
   });
 
   const router = useRouter();
   const { toast } = useToast();
 
+  // Efeito para inicializar o resumo com os tokens disponíveis
+  useEffect(() => {
+    setSummaryData(prevSummary => ({
+      ...prevSummary,
+      availableTokens: availableTokens,
+    }));
+  }, [availableTokens]);
+
   // Nova função para iniciar a consulta
   const handleIniciarConsulta = useCallback(async (periodo: string, periodoUnit: string, resultadosEsperados: string, urlValue: string) => {
-    console.log("Dados do resumo:", summaryData);
-
-    // Ativar estado de carregamento no formulário
-    // Assumindo que o formulário recebe setIsLoadin
-    // TODO: Passar setIsloading como prop para NovaConsultaForm e chamá-lo aqui
+    // console.log("Dados do resumo:", summaryData);
 
     const supabase = createBrowserClient();
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.error("Usuário não autenticado.");
+      // console.error("Usuário não autenticado.");
       toast({
         title: "Erro: Usuário não autenticado",
         description: "Por favor, faça login para iniciar uma consulta.",
@@ -78,7 +125,7 @@ export default function ClientPageContent({ platforms, plataformTools }: ClientP
       .single();
 
     if (userMetricsError || !userMetricsData) {
-      console.error("Erro ao buscar métricas do usuário:", userMetricsError);
+      // console.error("Erro ao buscar métricas do usuário:", userMetricsError);
       toast({
         title: "Erro",
         description: "Não foi possível verificar suas gemas disponíveis. Tente novamente.",
@@ -92,7 +139,7 @@ export default function ClientPageContent({ platforms, plataformTools }: ClientP
 
     // 2. Comparar gemas disponíveis com o custo total da consulta
     if (gemasAvailable < summaryData.totalCost) {
-      console.error("Gemas insuficientes.");
+      // console.error("Gemas insuficientes.");
       toast({
         title: "Gemas insuficientes",
         description: `Você precisa de ${summaryData.totalCost} gemas para esta consulta, mas possui apenas ${gemasAvailable}.`,
@@ -142,6 +189,28 @@ export default function ClientPageContent({ platforms, plataformTools }: ClientP
         isUserTaggedFeedURL: false,
         enhanceUserSearchWithFacebookPage: false,
       };
+    } else if (selectedPlatform?.slug === 'tiktok' && selectedTool?.type === 'page') { // Adicionar lógica para TikTok page
+      const usernames = selectedProfiles.map(profile => profile.username); // Extrair usernames dos perfis selecionados
+      const resultsExpectedInt = parseInt(resultadosEsperados, 10) || 0; // Converter resultados esperados para INT
+
+      formattedConfiguration = {
+        profiles: usernames, // Array de usernames
+        resultsPerPage: resultsExpectedInt, // Quantidade de resultados esperados como INT
+        excludePinnedPosts: true,
+        shouldDownloadCovers: true,
+        shouldDownloadVideos: true,
+        shouldDownloadAvatars: true,
+        shouldDownloadSubtitles: true,
+        shouldDownloadSlideshowImages: true,
+        profileScrapeSections: [
+          "videos"
+        ],
+        profileSorting: "latest",
+        searchSection: "",
+        maxProfilesPerQuery: 1000,
+        shouldDownloadMusicCovers: true,
+        proxyCountryCode: "None"
+      };
     } else if (selectedPlatform?.slug === 'outro_exemplo') {
        // Lógica de formatação para outras plataformas, se houver
     }
@@ -155,14 +224,14 @@ export default function ClientPageContent({ platforms, plataformTools }: ClientP
       // TODO: Adicionar outros campos necessários como status, created_at, etc.
     };
 
-    console.log("Dados para salvar:", userRequestData);
+    // console.log("Dados para salvar:", userRequestData);
 
     const { data, error } = await supabase
       .from('user_request')
       .insert([userRequestData]);
 
     if (error) {
-      console.error("Erro ao salvar no banco de dados:", error);
+      // console.error("Erro ao salvar no banco de dados:", error);
       toast({
         title: "Erro ao iniciar consulta",
         description: `Ocorreu um erro ao salvar sua consulta: ${error.message}`,
@@ -170,7 +239,7 @@ export default function ClientPageContent({ platforms, plataformTools }: ClientP
       });
       // TODO: Chamar setIsloading(false) aqui
     } else {
-      console.log("Dados salvos com sucesso:", data);
+      // console.log("Dados salvos com sucesso:", data);
       toast({
         title: "Consulta iniciada com sucesso!",
         description: "Você será redirecionado em breve.",
@@ -183,6 +252,7 @@ export default function ClientPageContent({ platforms, plataformTools }: ClientP
 
   const handlePlatformSelect = useCallback((platform: Platform | undefined) => {
     setSelectedPlatform(platform);
+    // console.log("selectedPlatformName changed:", platform?.name);
   }, [setSelectedPlatform]);
 
   const handleExtractionTypeSelect = useCallback((type: string | undefined) => {
@@ -191,8 +261,11 @@ export default function ClientPageContent({ platforms, plataformTools }: ClientP
 
   // Função para receber e atualizar os dados do resumo do NovaConsultaForm
   const handleSummaryUpdate = useCallback((data: SummaryData) => {
-    setSummaryData(data);
-  }, [setSummaryData]);
+    setSummaryData(prevSummary => ({
+      ...data, // Mescla os dados recebidos do formulário
+      availableTokens: availableTokens, // Sobrescreve availableTokens com o valor da prop
+    }));
+  }, [setSummaryData, availableTokens]); // Adicionar availableTokens como dependência
 
   // O cálculo de costDetails no componente pai não é mais necessário, pois o cálculo é feito no formulário
   // No entanto, manteremos uma versão simplificada para passar para NovaConsultaResumo, se necessário, ou ajustar NovaConsultaResumo
@@ -210,6 +283,15 @@ export default function ClientPageContent({ platforms, plataformTools }: ClientP
       totalCost: summaryData.totalCost, // Passar o custo total calculado pelo formulário
     };
   }, [summaryData, selectedProfiles.length, expectedResults]);
+
+  useEffect(() => {
+    // Calcular e atualizar o resumo no componente pai
+    // console.log("Atualizando resumo:", { // Adicionado para depuração
+    // console.log('Change received!', payload);
+    // console.error('Supabase fetch error:', error);
+    // console.error('Error fetching profile:', fetchError);
+    // console.error('Error creating profile:', createError);
+  }, []);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

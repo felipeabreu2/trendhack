@@ -15,6 +15,7 @@ interface SummaryData {
   estimatedTime: string;
   costPerResult: number;
   totalCost: number;
+  availableTokens: number;
 }
 
 interface NovaConsultaResumoProps {
@@ -95,7 +96,7 @@ export function NovaConsultaResumo({ summaryData, selectedPlatform, selectedExtr
           <AlertCircle className="h-4 w-4 text-amber-600" />
           <AlertTitle className="text-amber-800">Atenção</AlertTitle>
           <AlertDescription className="text-amber-700">
-            Você tem 105 tokens disponíveis. Esta consulta utilizará {summaryData.totalCost} tokens.
+            Você tem {summaryData.availableTokens} tokens disponíveis. Esta consulta utilizará {summaryData.totalCost} tokens.
           </AlertDescription>
         </Alert>
       </div>

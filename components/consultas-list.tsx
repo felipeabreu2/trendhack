@@ -103,7 +103,6 @@ export function ConsultasList({ consultas = [], totalPages = 1, currentPage = 1,
                       <div className="flex items-center gap-2">
                         <div className="flex -space-x-2 overflow-hidden">
                           {Array.isArray(consulta.perfil.avatars) && consulta.perfil.avatars.map((avatarUrl, index) => {
-                            console.log('Rendering Avatar URL:', avatarUrl);
                             if (typeof avatarUrl === 'string' && avatarUrl.length > 0) {
                               return (
                                 <div key={index} className="inline-block h-10 w-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden">

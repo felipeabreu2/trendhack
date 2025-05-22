@@ -61,6 +61,7 @@
       estimatedTime: string; // Assumindo que vem da ferramenta, ou pode ser fixo
       costPerResult: number;
       totalCost: number;
+      availableTokens: number;
     }) => void;
     onIniciarConsulta: (periodo: string, periodoUnit: string, resultadosEsperados: string, urlValue: string) => Promise<void>;
   }
@@ -128,7 +129,7 @@
         tipo_extracao: "",
         perfil: "", // Manter para o input controlado
         periodo: "30",
-        periodoUnit: "dias",
+        periodoUnit: "days",
         resultados: "1", // Usar prop e converter para string para o input
         url: "", // Manter para o input controlado
       },
@@ -277,6 +278,7 @@
         estimatedTime,
         costPerResult,
         totalCost,
+        availableTokens: 0, // Assuming availableTokens is always 0 for the given implementation
       });
 
     }, [selectedProfiles, watchedResultados, watchedUrl, filteredPlataformTools, selectedPlatformName, selectedExtractionType, onSummaryUpdate, form]); // Adicionar form nas dependências pode ajudar com a estabilidade se watch/getValues forem o problema
@@ -422,25 +424,33 @@
     };
 
     async function onSubmit(values: z.infer<typeof baseFormSchema>) {
-      // Validação condicional para listas - Ajustar para validar a URL única para tipo 'url'
+      setIsLoading(true);
+
+      // Mover a busca pela ferramenta e plataforma e obtenção da URL para o início da função
+      const selectedTool = filteredPlataformTools.find(tool => tool.name === values.tipo_extracao);
+      const selectedPlatformObj = platforms.find(p => p.name === values.plataforma);
+      const urlValue = form.getValues("url"); // Obter url diretamente do formulário
+
+      // Validação condicional para listas
       if (selectedTool?.type === 'page' && selectedProfiles.length === 0) {
         toast({
           title: "Perfis necessários",
           description: "Por favor, adicione pelo pelo menos um perfil para esta consulta.",
+          variant: "destructive",
         });
+        setIsLoading(false); // Parar loading na falha de validação
         return;
       }
       // Validar campo URL para tipo 'url'
       if (selectedTool?.type === 'url') {
-        const urlValue = form.getValues("url");
-
-        // Primeiro, verificar se a URL está vazia ou undefined
+        // Verificar se a URL está vazia ou undefined
         if (!urlValue) {
            toast({
             title: "URL necessária",
             description: "Por favor, insira uma URL para esta consulta.",
             variant: "destructive",
           });
+          setIsLoading(false); // Parar loading na falha de validação
           return;
         }
 
@@ -453,29 +463,23 @@
             description: "Por favor, insira uma URL válida.",
             variant: "destructive",
           });
+          setIsLoading(false); // Parar loading na falha de validação
           return;
         }
       }
 
-      setIsLoading(true)
-
-      // Simulando o envio do formulário - Lógica para usar selectedProfiles/selectedUrls no envio real virá aqui
-      setTimeout(async () => {
-        setIsLoading(false)
-
-        toast({
-          title: "Consulta iniciada",
-          description: "Sua consulta foi iniciada com sucesso.",
-        })
-
-        router.push("/dashboard")
-      }, 2000)
+      // A lógica de salvar no banco está na função onIniciarConsulta passada como prop
+      // Chamá-la com os valores corretos
       await onIniciarConsulta(
-        form.getValues("periodo") || '',
-        form.getValues("periodoUnit") || '',
-        form.getValues("resultados") || '',
-        form.getValues("url") || ''
+        values.periodo,
+        values.periodoUnit,
+        values.resultados,
+        urlValue || ''
       );
+
+      // A lógica de loading e redirecionamento está dentro de onIniciarConsulta
+      // Não precisamos parar o loading aqui novamente, a menos que onIniciarConsulta lance um erro.
+      // Se onIniciarConsulta lançar um erro, o cath block no componente pai (ClientPageContent) lidará com isso.
     }
 
     return (

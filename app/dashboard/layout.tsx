@@ -13,10 +13,7 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
-  console.log('User check:', user)
-
   if (!user) {
-    console.log('No user found, redirecting to login')
     redirect("/login")
   }
 

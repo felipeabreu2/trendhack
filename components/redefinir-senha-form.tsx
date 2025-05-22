@@ -67,7 +67,6 @@ export function RedefinirSenhaForm() {
         router.push("/login")
       }, 2000)
     } catch (error) {
-      console.error("Erro ao redefinir senha:", error)
       toast({
         title: "Erro ao redefinir senha",
         description: "Ocorreu um erro inesperado. Tente novamente mais tarde.",

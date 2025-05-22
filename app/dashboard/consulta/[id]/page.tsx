@@ -23,10 +23,13 @@ export default async function ConsultaPage({
 }: {
   params: { id: string }
 }) {
+  // Await the dynamic params
+  const awaitedParams = await params;
+
   const supabase = await createServerClient()
 
   // Buscar detalhes da consulta
-  const { data: consulta } = await supabase.from("user_request").select("*").eq("id", params.id).single()
+  const { data: consulta } = await supabase.from("user_request").select("*").eq("id", awaitedParams.id).single()
 
   if (!consulta) {
     notFound()
@@ -44,7 +47,7 @@ export default async function ConsultaPage({
   }
 
   // Buscar vídeos da consulta
-  const { data: videosRaw } = await supabase.from("videos").select("*").eq("user_request", params.id)
+  const { data: videosRaw } = await supabase.from("videos").select("*").eq("user_request", awaitedParams.id)
 
   // Buscar dados de perfil (pages) e plataforma (plataform) para todos os vídeos
   const influencerIds = videosRaw?.map(v => v.influencer_id).filter(Boolean) ?? []
@@ -92,13 +95,13 @@ export default async function ConsultaPage({
       <ConsultaCards
         stats={{
           visualizacoes: videosRaw?.reduce((sum, video) => sum + (video.views_count || 0), 0) || 0,
-          curtidas: videosRaw?.reduce((sum, video) => sum + (video.likes_count || 0), 0) || 316,
+          curtidas: videosRaw?.reduce((sum, video) => sum + (video.likes_count || 0), 0) || 0,
           comentarios: videosRaw?.reduce((sum, video) => sum + (video.comments_count || 0), 0) || 0,
           duracao_media: videosRaw?.length
             ? formatDuration(videosRaw.reduce((sum, video) => sum + (Number(video.duration) || 0), 0) / videosRaw.length)
-            : formatDuration(11.85),
+            : formatDuration(0),
         }}
-        videoCount={videos?.length || 1}
+        videoCount={videos?.length || 0}
       />
       <VideosList videos={videos} />
     </div>

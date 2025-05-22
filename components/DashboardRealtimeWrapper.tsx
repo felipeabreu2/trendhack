@@ -4,10 +4,14 @@ import { useState, useEffect } from "react";
 import { createClientSupabase } from "@/lib/supabase-client";
 import { ConsultasList } from "@/components/consultas-list";
 import { useRouter } from "next/navigation";
+import { DashboardCards } from "./dashboard-cards";
 
 interface DashboardRealtimeWrapperProps {
   userId: string;
   initialSearchParams: { page?: string };
+  consultations: Consulta[];
+  totalPages: number;
+  currentPage: number;
 }
 
 interface Consulta {
@@ -24,23 +28,39 @@ interface Consulta {
   statusColor: string;
 }
 
+interface DashboardStats {
+  consultas_concluidas: number;
+  consultas_pendentes: number;
+  gemas_usadas: number;
+  gemas_restantes: number;
+}
+
 export function DashboardRealtimeWrapper({
   userId,
   initialSearchParams,
+  consultations: initialConsultations,
+  totalPages: initialTotalPages,
+  currentPage: initialCurrentPage,
 }: DashboardRealtimeWrapperProps) {
   const supabase = createClientSupabase();
   const router = useRouter();
-  const [consultas, setConsultas] = useState<Consulta[]>([]);
+  const [consultas, setConsultas] = useState<Consulta[]>(initialConsultations);
   const [videos, setVideos] = useState<any[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(initialTotalPages);
+  const [currentPage, setCurrentPage] = useState(initialCurrentPage);
+  const [stats, setStats] = useState<DashboardStats>({
+    consultas_concluidas: 0,
+    consultas_pendentes: 0,
+    gemas_usadas: 0,
+    gemas_restantes: 0,
+  });
 
   const pageSize = 6; // Manter o tamanho da página definido anteriormente
 
   useEffect(() => {
     const fetchInitialData = async () => {
       const awaitedSearchParams = await initialSearchParams;
-      const page = Number(awaitedSearchParams?.page) > 0 ? Number(awaitedSearchParams.page) : 1;
+      const page = Number(awaitedSearchParams?.page) > 0 ? Number(awaitedSearchParams.page) : initialCurrentPage;
       setCurrentPage(page);
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -145,11 +165,29 @@ export function DashboardRealtimeWrapper({
         const totalPagesCount = totalCountConsultas ? Math.ceil(totalCountConsultas / pageSize) : 1;
         setTotalPages(totalPagesCount);
       }
+
+      // Buscar métricas do usuário na view view_user_metrics
+      const { data: metrics, error: metricsError } = await supabase
+        .from("view_user_metrics")
+        .select("*")
+        .eq("user", userId)
+        .single();
+
+      if (metricsError) {
+        console.error("Erro ao buscar métricas em tempo real:", metricsError);
+      } else if (metrics) {
+        setStats({
+          consultas_concluidas: metrics?.request_complete ?? 0,
+          consultas_pendentes: metrics?.request_pending ?? 0,
+          gemas_usadas: metrics?.gemas_spent ?? 0,
+          gemas_restantes: metrics?.gemas_available ?? 0,
+        });
+      }
     };
 
     const fetchRecentVideos = async () => {
       const awaitedSearchParams = await initialSearchParams; // Obter searchParams para paginação de vídeos
-      const page = Number(awaitedSearchParams?.page) > 0 ? Number(awaitedSearchParams.page) : 1; // Página atual para vídeos
+      const page = Number(awaitedSearchParams?.page) > 0 ? Number(awaitedSearchParams.page) : initialCurrentPage; // Página atual para vídeos
       // setCurrentPage(page); // Não atualizar currentPage global aqui, pois fetchInitialData já faz isso
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
@@ -168,11 +206,11 @@ export function DashboardRealtimeWrapper({
           perfil:pages(full_name, username, profile_pic_url)
         `)
         .eq("user", userId)
-        .order("published_at", { ascending: false })
+        .order("created_at", { ascending: false })
         .range(from, to); // Aplicar range para paginação
 
       if (videosError) {
-        console.error("Erro ao buscar vídeos recentes:", videosError);
+        // console.error("Erro ao buscar vídeos recentes:", videosError);
         setVideos([]);
         return; // Sair da função se houver erro na primeira query
       }
@@ -190,7 +228,7 @@ export function DashboardRealtimeWrapper({
             .in("slug", platformsSlugs);
           
           if (plataformasError) {
-            console.error("Erro ao buscar dados das plataformas:", plataformasError);
+            // console.error("Erro ao buscar dados das plataformas:", plataformasError);
             // Continuar mesmo com erro, mas sem os dados da plataforma
           } else {
             plataformas = plataformasData;
@@ -253,7 +291,6 @@ export function DashboardRealtimeWrapper({
           // Dependendo do evento (INSERT, UPDATE, DELETE), atualize a lista de consultas
           // Para simplificar, vamos refetch a página atual em caso de qualquer mudança relevante
           // Em uma aplicação maior, você pode querer atualizar o estado de forma mais granular
-          console.log('Change received!', payload);
           fetchInitialData(); // Refetch os dados da página atual para simplificar
         }
       )
@@ -283,12 +320,15 @@ export function DashboardRealtimeWrapper({
   };
 
   return (
-    <ConsultasList
-      consultas={consultas}
-      videos={videos}
-      totalPages={totalPages} // totalPages refletirá o total da última busca (consultas ou vídeos)
-      currentPage={currentPage}
-      // ConsultasList já usa o router para mudar a página, então não precisamos passar handlePageChange
-    />
+    <div className="space-y-6">
+      <DashboardCards stats={stats} />
+      <ConsultasList
+        consultas={consultas}
+        videos={videos}
+        totalPages={totalPages} // totalPages refletirá o total da última busca (consultas ou vídeos)
+        currentPage={currentPage}
+        // ConsultasList já usa o router para mudar a página, então não precisamos passar handlePageChange
+      />
+    </div>
   );
 } 

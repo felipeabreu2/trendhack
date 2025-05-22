@@ -32,27 +32,7 @@ export function VideosList({ videos = [] }: VideosListProps) {
   const router = useRouter()
 
   // Se não houver vídeos, usamos dados de exemplo
-  const exampleVideos: Video[] = [
-    {
-      id: "1",
-      conteudo: {
-        thumbnail: "/placeholder.svg?height=60&width=60",
-        titulo: "🌊 RECREIO+RJ // 8:15h // 17.05.2023",
-        url: "https://www.instagram.com/p/DJwN",
-      },
-      perfil: {
-        nome: "Resenha das Ondas",
-        avatar: "/placeholder.svg?height=40&width=40",
-        usuario: "resenhadasondas",
-      },
-      plataforma: "Instagram",
-      duracao: "00:12",
-      visualizacoes: 0,
-      curtidas: 316,
-      comentarios: 0,
-      publicado: "17/05/2025 08:36",
-    },
-  ]
+  const exampleVideos: Video[] = []
 
   const displayVideos = videos.length > 0 ? videos : exampleVideos
 

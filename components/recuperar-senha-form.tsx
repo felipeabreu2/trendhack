@@ -53,7 +53,6 @@ export function RecuperarSenhaForm() {
         description: "Verifique sua caixa de entrada para redefinir sua senha.",
       })
     } catch (error) {
-      console.error("Erro ao enviar e-mail de recuperação:", error)
       toast({
         title: "Erro ao enviar e-mail",
         description: "Ocorreu um erro inesperado. Tente novamente mais tarde.",

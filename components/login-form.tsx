@@ -66,7 +66,6 @@ export function LoginForm() {
 
       window.location.href = "/dashboard"
     } catch (error) {
-      console.error("Erro ao fazer login:", error)
       toast({
         title: "Erro ao fazer login",
         description: "Ocorreu um erro inesperado. Tente novamente mais tarde.",

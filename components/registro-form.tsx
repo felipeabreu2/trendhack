@@ -98,7 +98,6 @@ export function RegistroForm() {
       // Redirecionar para a página de login após o registro bem-sucedido
       router.push("/login")
     } catch (error) {
-      console.error("Erro ao criar conta:", error)
       toast({
         title: "Erro ao criar conta",
         description: "Ocorreu um erro inesperado. Tente novamente mais tarde.",

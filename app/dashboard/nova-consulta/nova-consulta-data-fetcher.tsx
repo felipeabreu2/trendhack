@@ -37,8 +37,7 @@ export default async function NovaConsultaDataFetcher(props: NovaConsultaDataFet
   const platforms: Platform[] = platformsData || [];
 
   if (platformsError) {
-    console.error('Error fetching platforms:', platformsError);
-    // Tratar erro na UI, se necessário
+    // console.error('Error fetching platforms:', platformsError);
   }
 
   const { data: plataformToolsData, error: toolsError } = await supabase
@@ -49,8 +48,7 @@ export default async function NovaConsultaDataFetcher(props: NovaConsultaDataFet
   const plataformTools = plataformToolsData || [];
 
   if (toolsError) {
-    console.error('Error fetching plataform tools:', toolsError);
-    // Tratar erro na UI, se necessário
+    // console.error('Error fetching plataform tools:', toolsError);
   }
 
 

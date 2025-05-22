@@ -13,14 +13,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useEffect } from "react"
 
 export function Navbar() {
   const pathname = usePathname()
   const { user, signOut, isLoading } = useAuth()
 
+  useEffect(() => {
+    console.log("Navbar mounted. signOut is:", typeof signOut);
+  }, [signOut]);
+
   const isActive = (path: string) => {
     return pathname === path
   }
+
+  // Função auxiliar para lidar com o logout
+  const handleLogout = async () => {
+    console.log("Navbar: handleLogout chamada");
+    await signOut();
+    console.log("Navbar: signOut aguardado");
+  };
 
   return (
     <header className="bg-white border-b">
@@ -44,20 +56,10 @@ export function Navbar() {
                   Nova Consulta
                 </Button>
               </Link>
-              <Link href="/dashboard/admin">
-                <Button variant={isActive("/dashboard/admin") ? "default" : "ghost"} className="rounded-full">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Admin
-                </Button>
-              </Link>
             </nav>
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full flex items-center">
-              <span className="font-medium">105</span>
-            </div>
-
             {isLoading ? (
               <Button variant="ghost" size="icon" disabled className="h-8 w-8 rounded-full">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -79,13 +81,26 @@ export function Navbar() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => signOut()}>
+                  <DropdownMenuItem onClick={() => {
+                    console.log("AuthProvider: Chamando signOut do DropdownMenuItem");
+                    signOut();
+                  }}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sair</span>
+                    <span>Sair (Menu)</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="rounded-full hidden md:flex"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair
+            </Button>
           </div>
         </div>
       </div>

@@ -44,11 +44,12 @@ export default async function DashboardPage({ searchParams = {} }: { searchParam
     .range(from, to)
 
   // Buscar métricas do usuário na view view_user_metrics
-  const { data: metrics } = await supabase
-    .from("view_user_metrics")
-    .select("*")
-    .eq("user", user.id)
-    .single()
+  // REMOVER: A busca de métricas agora é feita em DashboardRealtimeWrapper
+  // const { data: metrics } = await supabase
+  //   .from("view_user_metrics")
+  //   .select("*")
+  //   .eq("user", user.id)
+  //   .single()
 
   // Buscar ids de plataformas e tipos
   const plataformaIds = userRequests?.map(r => r.type?.plataform).filter(Boolean) ?? []
@@ -74,8 +75,6 @@ export default async function DashboardPage({ searchParams = {} }: { searchParam
     .select("id, profile_pic_url")
     .in("id", uniqueInfluencerIds)
 
-  console.log('Dados dos influenciadores (pages):', influenciadores);
-
   // Montar as consultas para o componente
   const consultas = (userRequests ?? []).map(req => {
     const plataformaObj = plataformas?.find(p => p.id === req.type?.plataform)
@@ -99,23 +98,23 @@ export default async function DashboardPage({ searchParams = {} }: { searchParam
     }
   })
 
-  console.log("Avatares gerados para consultas:", consultas.map(c => c.perfil.avatars));
-
   // Calcular total de páginas
   const totalPages = totalCount ? Math.ceil(totalCount / pageSize) : 1
 
   return (
     <div className="space-y-6">
       <DashboardHeader />
-      <DashboardCards
+      {/* REMOVER: DashboardCards agora é renderizado dentro de DashboardRealtimeWrapper */}
+      {/* <DashboardCards
         stats={{
           consultas_concluidas: metrics?.request_complete ?? 0,
           consultas_pendentes: metrics?.request_pending ?? 0,
           gemas_usadas: metrics?.gemas_spent ?? 0,
           gemas_restantes: metrics?.gemas_available ?? 0,
         }}
-      />
-      <DashboardRealtimeWrapper userId={user.id} initialSearchParams={searchParams} />
+      /> */}
+      {/* Passar consultas, totalPages e currentPage para o wrapper */}
+      <DashboardRealtimeWrapper userId={user.id} initialSearchParams={awaitedSearchParams} consultations={consultas} totalPages={totalPages} currentPage={currentPage}/>
     </div>
   )
 }
