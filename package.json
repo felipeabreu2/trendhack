@@ -8,14 +8,6 @@
     "start": "next start",
     "lint": "next lint"
   },
-  "packages": [
-    "app/*",
-    "components/*",
-    "lib/*",
-    "hooks/*",
-    "styles/*",
-    "public/*"
-  ],
   "dependencies": {
     "@hookform/resolvers": "latest",
     "@radix-ui/react-accordion": "1.2.2",
