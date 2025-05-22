@@ -1,13 +1,19 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "trendhack-workspace",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "build": "pnpm --parallel build",
+    "start": "pnpm --parallel start"
   },
+  "packages": [
+    "app/*",
+    "components/*",
+    "lib/*",
+    "hooks/*",
+    "styles/*",
+    "public/*"
+  ],
   "dependencies": {
     "@hookform/resolvers": "latest",
     "@radix-ui/react-accordion": "1.2.2",
