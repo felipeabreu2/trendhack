@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { DashboardCards } from "@/components/dashboard-cards"
 import { ConsultasList } from "@/components/consultas-list"
-import { createServerClient } from "@/lib/supabase-server"
+import { createClientReadOnly } from "@/lib/supabase-server"
 import { cookies } from "next/headers"
 import { DashboardRealtimeWrapper } from "@/components/DashboardRealtimeWrapper"
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 }
 
 export default async function DashboardPage({ searchParams = {} }: { searchParams?: { page?: string } }) {
-  const supabase = await createServerClient()
+  const supabase = await createClientReadOnly()
 
   // Obter usuário autenticado de forma segura
   const {

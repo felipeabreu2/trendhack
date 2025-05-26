@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [supabaseInitialized, setSupabaseInitialized] = useState(true) // Assume inicializado por padrão
+  const [supabaseInitialized, setSupabaseInitialized] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
@@ -68,12 +68,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Configurar o listener de mudanças de autenticação
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-      console.log("AuthProvider: onAuthStateChange disparado, evento:", _event)
-      setSession(session)
-      setUser(session?.user ?? null)
-      console.log("AuthProvider: onAuthStateChange finalizado, isLoading = false")
-      setIsLoading(false)
+    } = supabase.auth.onAuthStateChange((event: string, session: Session | null) => {
+      console.log("AuthProvider: onAuthStateChange disparado, evento:", event)
+      
+      // Atualizar o estado baseado no evento
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+        setSession(session)
+        setUser(session?.user ?? null)
+        setIsLoading(false)
+        
+        // Se foi um logout, redirecionar para login
+        if (event === 'SIGNED_OUT') {
+          console.log("AuthProvider: Usuário deslogado, redirecionando para /login")
+          router.push("/login")
+        }
+      }
+      
+      console.log("AuthProvider: onAuthStateChange finalizado")
     })
 
     // Limpar o listener quando o componente for desmontado
@@ -84,47 +95,63 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [router])
 
   const signOut = async () => {
-    console.log("AuthProvider: >>> Entrando na função signOut");
-    console.log("AuthProvider: Função signOut chamada");
+    console.log("AuthProvider: >>> Entrando na função signOut")
+    
     try {
-      console.log("AuthProvider: >>> Tentando logout diretamente com supabase.auth.signOut()");
-      // Tentar fazer o logout diretamente com o cliente Supabase no navegador
-      const { error } = await supabase.auth.signOut();
-      console.log("AuthProvider: <<< Retornou de supabase.auth.signOut()");
+      // Definir loading como true durante o processo de logout
+      setIsLoading(true)
+      
+      console.log("AuthProvider: >>> Tentando logout com supabase.auth.signOut()")
+      
+      // Fazer logout do Supabase
+      const { error } = await supabase.auth.signOut({
+        scope: 'local' // Remove apenas a sessão local
+      })
+      
+      console.log("AuthProvider: <<< Retornou de supabase.auth.signOut()")
 
       if (error) {
-        console.error("AuthProvider: Erro ao fazer logout do Supabase no cliente:", error);
+        console.error("AuthProvider: Erro ao fazer logout do Supabase:", error)
+        
+        // Forçar limpeza do estado mesmo com erro
+        setUser(null)
+        setSession(null)
+        setIsLoading(false)
+        
         toast({
-          title: "Erro ao fazer logout",
-          description: `Ocorreu um erro ao desconectar: ${error.message}`,
-          variant: "destructive",
-        });
-        // Continuar com a limpeza de estado e navegação mesmo em caso de erro no Supabase,
-        // pois a sessão pode já estar inválida ou precisarmos forçar a UI a atualizar.
+          title: "Aviso",
+          description: "Sessão limpa localmente. Redirecionando...",
+          variant: "default",
+        })
+        
+        // Redirecionar mesmo com erro
+        router.push("/login")
       } else {
-        console.log("AuthProvider: Logout do Supabase no cliente bem-sucedido");
+        console.log("AuthProvider: Logout do Supabase bem-sucedido")
+        
+        // O onAuthStateChange vai lidar com a limpeza do estado e redirecionamento
         toast({
           title: "Logout realizado",
           description: "Você foi desconectado com sucesso.",
-        });
+        })
       }
 
-      // Limpar estado local no cliente para refletir o logout imediatamente na UI
-      setUser(null);
-      setSession(null);
-
-      // Usar o router do Next.js para navegar para a página de login no cliente
-      // Isso garante a transição da UI.
-      router.push("/login");
-      console.log("AuthProvider: Redirecionando para /login usando router.push");
-
     } catch (error) {
-      console.error("AuthProvider: Erro inesperado durante o logout:", error);
+      console.error("AuthProvider: Erro inesperado durante o logout:", error)
+      
+      // Forçar limpeza em caso de erro inesperado
+      setUser(null)
+      setSession(null)
+      setIsLoading(false)
+      
       toast({
         title: "Erro ao fazer logout",
-        description: "Ocorreu um erro inesperado. Tente novamente.",
+        description: "Erro inesperado, mas sessão foi limpa.",
         variant: "destructive",
-      });
+      })
+      
+      // Redirecionar mesmo com erro
+      router.push("/login")
     }
   }
 

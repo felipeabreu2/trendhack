@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, PlusCircle, Settings, LogOut, Loader2 } from "lucide-react"
+import { LayoutDashboard, PlusCircle, Settings, LogOut, Loader2, Diamond } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useEffect } from "react"
+import { toast } from "@/components/ui/use-toast"
 
 export function Navbar() {
   const pathname = usePathname()
@@ -30,8 +31,18 @@ export function Navbar() {
   // Função auxiliar para lidar com o logout
   const handleLogout = async () => {
     console.log("Navbar: handleLogout chamada");
-    await signOut();
-    console.log("Navbar: signOut aguardado");
+    try {
+      await signOut();
+      console.log("Navbar: signOut aguardado");
+    } catch (error) {
+      console.error("Navbar: Erro no handleLogout:", error);
+      // Opcional: Adicionar um toast para informar o usuário sobre o erro
+      toast({
+        title: "Erro ao sair",
+        description: "Não foi possível fazer logout. Verifique o console para mais detalhes.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -54,6 +65,12 @@ export function Navbar() {
                 <Button variant={isActive("/dashboard/nova-consulta") ? "default" : "ghost"} className="rounded-full">
                   <PlusCircle className="w-4 h-4 mr-2" />
                   Nova Consulta
+                </Button>
+              </Link>
+              <Link href="/dashboard/planos">
+                <Button variant={isActive("/dashboard/planos") ? "default" : "ghost"} className="rounded-full">
+                  <Diamond className="w-4 h-4 mr-2" />
+                  Planos
                 </Button>
               </Link>
             </nav>
@@ -83,7 +100,7 @@ export function Navbar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => {
                     console.log("AuthProvider: Chamando signOut do DropdownMenuItem");
-                    signOut();
+                    handleLogout();
                   }}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sair (Menu)</span>
