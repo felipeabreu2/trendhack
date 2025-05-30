@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createClientSupabase } from "@/lib/supabase-client";
 import { ConsultasList } from "@/components/consultas-list";
 import { useRouter } from "next/navigation";
-import { DashboardCards } from "./dashboard-cards";
+import { Stats } from "./ui/stats";
 
 interface DashboardRealtimeWrapperProps {
   userId: string;
@@ -12,6 +12,7 @@ interface DashboardRealtimeWrapperProps {
   consultations: Consulta[];
   totalPages: number;
   currentPage: number;
+  initialStats: DashboardStats; // Adicionar prop para as métricas iniciais
 }
 
 interface Consulta {
@@ -41,6 +42,7 @@ export function DashboardRealtimeWrapper({
   consultations: initialConsultations,
   totalPages: initialTotalPages,
   currentPage: initialCurrentPage,
+  initialStats, // Receber métricas iniciais
 }: DashboardRealtimeWrapperProps) {
   const supabase = createClientSupabase();
   const router = useRouter();
@@ -48,17 +50,14 @@ export function DashboardRealtimeWrapper({
   const [videos, setVideos] = useState<any[]>([]);
   const [totalPages, setTotalPages] = useState(initialTotalPages);
   const [currentPage, setCurrentPage] = useState(initialCurrentPage);
-  const [stats, setStats] = useState<DashboardStats>({
-    consultas_concluidas: 0,
-    consultas_pendentes: 0,
-    gemas_usadas: 0,
-    gemas_restantes: 0,
-  });
+  const [stats, setStats] = useState<DashboardStats>(initialStats); // Usar métricas iniciais
 
   const pageSize = 6; // Manter o tamanho da página definido anteriormente
 
   useEffect(() => {
-    const fetchInitialData = async () => {
+    // A busca inicial de consultas e métricas é feita no Server Component e passada como prop.
+    // Esta função agora só será usada para refetch em caso de update via Realtime.
+    const refetchConsultationsAndStats = async () => {
       const awaitedSearchParams = await initialSearchParams;
       const page = Number(awaitedSearchParams?.page) > 0 ? Number(awaitedSearchParams.page) : initialCurrentPage;
       setCurrentPage(page);
@@ -74,7 +73,7 @@ export function DashboardRealtimeWrapper({
       // Buscar requests do usuário paginados
       const { data: userRequests } = await supabase
         .from("user_request")
-        .select("*", { count: 'exact' })
+        .select("*", { count: 'exact' }) // Manter count: 'exact' se a paginação for baseada no count total aqui (improvável com dados iniciais)
         .eq("user", userId)
         .order("created_at", { ascending: false })
         .range(from, to);
@@ -82,24 +81,26 @@ export function DashboardRealtimeWrapper({
       if (userRequests) {
         // Mapear dados para o formato da interface Consulta (manter lógica de app/dashboard/page.tsx)
         const plataformaIds = userRequests?.map(r => r.type?.plataform).filter(Boolean) ?? []
+        console.log('DashboardRealtimeWrapper: userRequests fetched', userRequests);
+        console.log('DashboardRealtimeWrapper: extracted plataformaIds', plataformaIds);
         const tipoIds = userRequests?.map(r => r.type?.type).filter(Boolean) ?? []
-        const influencerIds = userRequests?.map(r => (Array.isArray(r.influencer_id) ? r.influencer_id[0] : r.influencer_id)).filter(Boolean) ?? []
-      
+        const allInfluencerIds = userRequests?.flatMap(r => Array.isArray(r.influencer_id) ? r.influencer_id : (r.influencer_id ? [r.influencer_id] : [])).filter(Boolean) ?? [];
+        const uniqueInfluencerIds = Array.from(new Set(allInfluencerIds));
+
         const { data: plataformas } = await supabase
           .from("plataform")
           .select("id, name, image")
           .in("id", plataformaIds)
-      
+
+        console.log('DashboardRealtimeWrapper: plataformas fetched', plataformas);
+
+        // Buscar nomes dos tipos de extração (name)
         const { data: tipos } = await supabase
           .from("plataform_tools")
           .select("id, name")
           .in("id", tipoIds)
-      
-        // Buscar dados dos influenciadores (agora da tabela pages, campo profile_pic_url)
-        // Usar a lista completa de uniqueInfluencerIds aqui, não apenas o primeiro
-        const allInfluencerIds = userRequests?.flatMap(r => Array.isArray(r.influencer_id) ? r.influencer_id : (r.influencer_id ? [r.influencer_id] : [])).filter(Boolean) ?? [];
-        const uniqueInfluencerIds = Array.from(new Set(allInfluencerIds));
 
+        // Buscar dados dos influenciadores (agora da tabela pages, campo profile_pic_url)
         const { data: influenciadores } = await supabase
           .from("pages")
           .select("id, profile_pic_url")
@@ -109,8 +110,10 @@ export function DashboardRealtimeWrapper({
             const plataformaObj = plataformas?.find(p => p.id === req.type?.plataform)
             const plataforma = plataformaObj?.name ?? "Desconhecida"
             const plataformaImage = plataformaObj?.image ?? "/placeholder.svg"
-            const tipo_extracao = tipos?.find(t => t.id === req.type?.type)?.name ?? "Desconhecido"
             
+            console.log(`DashboardRealtimeWrapper: Mapping request ${req.id} - Plataform ID: ${req.type?.plataform}, Plataform Data:`, plataformaObj);
+            console.log(`DashboardRealtimeWrapper: Mapped consulta ${req.id} - plataformaImage: ${plataformaImage}`);
+
             // Mapear influencer_id(s) para profile_pic_url(s) e criar o array de arrays
             const avatarsArray = (Array.isArray(req.influencer_id) ? req.influencer_id : (req.influencer_id ? [req.influencer_id] : []))
               .map((id: string) => influenciadores?.find(i => i.id === id)?.profile_pic_url || "/placeholder.svg")
@@ -154,14 +157,14 @@ export function DashboardRealtimeWrapper({
                 },
                 plataforma,
                 plataformaImage,
-                tipo_extracao,
+                tipo_extracao: tipos?.find(t => t.id === req.type?.type)?.name ?? "Desconhecido",
                 status: statusText,
                 statusColor,
                 tokens: req.gemas,
             };
         });
         setConsultas(mappedConsultas);
-        // Atualizar totalPages APÓS buscar consultas
+        // Atualizar totalPages APÓS buscar consultas (isso sobrescreverá o totalPages de consultas quando a aba de vídeo for ativa)
         const totalPagesCount = totalCountConsultas ? Math.ceil(totalCountConsultas / pageSize) : 1;
         setTotalPages(totalPagesCount);
       }
@@ -276,33 +279,41 @@ export function DashboardRealtimeWrapper({
       }
     };
 
-    // Chamar ambas as funções de busca
-    fetchInitialData();
+    // Chamar fetchRecentVideos no carregamento inicial
     fetchRecentVideos();
 
-    // Configurar assinatura em tempo real
+    // Configurar assinatura em tempo real para user_request (agora apenas para refetch)
     const subscription = supabase
       .channel(`user_requests:user=eq.${userId}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'user_request', filter: `user=eq.${userId}` },
         (payload) => {
-          // Lógica para atualizar os dados em tempo real
-          // Dependendo do evento (INSERT, UPDATE, DELETE), atualize a lista de consultas
-          // Para simplificar, vamos refetch a página atual em caso de qualquer mudança relevante
-          // Em uma aplicação maior, você pode querer atualizar o estado de forma mais granular
-          fetchInitialData(); // Refetch os dados da página atual para simplificar
+          console.log('User request change received!', payload);
+          // Refetch os dados da página atual em caso de qualquer mudança relevante
+          refetchConsultationsAndStats();
         }
       )
       .subscribe();
 
     // Configurar assinatura em tempo real para videos (opcional, para atualizações granulares)
-    // Para simplificar por enquanto, vamos apenas refetch ao receber user_request update
-    // Uma abordagem mais robusta envolveria lidar com eventos INSERT, UPDATE, DELETE na tabela videos
+    const videoSubscription = supabase
+      .channel(`videos:user=eq.${userId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'videos', filter: `user=eq.${userId}` },
+        (payload) => {
+          console.log('Video change received!', payload);
+          // Refetch os dados dos vídeos recentes em caso de mudança
+          fetchRecentVideos();
+        }
+      )
+      .subscribe();
 
     // Limpar assinatura ao desmontar o componente
     return () => {
       supabase.removeChannel(subscription);
+      supabase.removeChannel(videoSubscription);
     };
   }, [userId, initialSearchParams, supabase, pageSize]); // Adicionar dependências
 
@@ -315,15 +326,17 @@ export function DashboardRealtimeWrapper({
   };
 
   // Manusear mudança de página (já existe em ConsultasList, mas replicar aqui para controle)
-  const handlePageChange = (page: number) => {
-    router.push(`?page=${page}`);
-  };
+  // Esta função não é mais necessária aqui, pois ConsultasList lida com isso internamente via router.
+  // No entanto, se a paginação for controlada pelo wrapper, ela seria usada aqui.
+  // const handlePageChange = (page: number) => {
+  //   router.push(`?page=${page}`);
+  // };
 
   return (
     <div className="space-y-6">
-      <DashboardCards stats={stats} />
+      <Stats stats={stats} />
       <ConsultasList
-        consultas={consultas}
+        consultas={consultas} // Usar o estado local atualizado via realtime/refetch
         videos={videos}
         totalPages={totalPages} // totalPages refletirá o total da última busca (consultas ou vídeos)
         currentPage={currentPage}

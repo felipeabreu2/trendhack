@@ -31,7 +31,7 @@ interface NovaConsultaResumoProps {
 // Atualizar as props recebidas no componente para incluir summaryData e remover costDetails
 export function NovaConsultaResumo({ summaryData, selectedPlatform, selectedExtractionType }: NovaConsultaResumoProps) {
   return (
-    <div className="bg-white rounded-lg p-6 shadow">
+    <div className="bg-card rounded-lg p-6 shadow border">
       <h2 className="text-xl font-semibold mb-4">Resumo</h2>
 
       <div className="space-y-4">

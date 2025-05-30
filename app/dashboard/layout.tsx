@@ -1,7 +1,11 @@
 import type React from "react"
-import { Navbar } from "@/components/navbar"
+
 import { createClientReadOnly } from "@/lib/supabase-server"
 import { redirect } from "next/navigation"
+import { DashboardNavbar } from "@/components/dashboard-navbar"
+import { ThemeProvider } from "@/components/theme-provider"
+import { BGPattern } from "@/components/ui/bg-pattern"
+import { AuthProvider } from "@/components/auth-provider"
 
 export default async function DashboardLayout({
   children,
@@ -9,18 +13,23 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const supabase = await createClientReadOnly()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user }, } = await supabase.auth.getUser();
 
   if (!user) {
     redirect("/login")
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
-      <Navbar />
-      <div className="container mx-auto py-6">{children}</div>
-    </div>
+    <AuthProvider>
+      <div className="min-h-screen relative">
+        <BGPattern variant="grid" mask="fade-edges" />
+
+        <header className="fixed top-4 left-0 right-0 z-10 w-full">
+          <DashboardNavbar />
+        </header>
+
+        <div className="container mx-auto py-6 pt-20">{children}</div>
+      </div>
+    </AuthProvider>
   )
 }

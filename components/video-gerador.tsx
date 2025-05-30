@@ -34,7 +34,7 @@ export function VideoGerador({
   const [showHistoryModal, setShowHistoryModal] = useState(false); // Estado para controlar o modal
   const [history, setHistory] = useState<any[]>([]); // Estado para armazenar o histórico
 
-  console.log('VideoGerador - replyStatus:', replyStatus);
+  //console.log('VideoGerador - replyStatus:', replyStatus);
 
   // Função para buscar histórico
   async function fetchHistory() {
@@ -113,12 +113,12 @@ export function VideoGerador({
   }
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow mt-6">
-      <h2 className="text-xl font-semibold mb-4">Gerador de Conteúdo Viral</h2>
+    <div className="bg-card rounded-lg p-6 shadow border">
+      <h2 className="text-xl font-semibold mb-4 text-foreground">Gerador de Conteúdo Viral</h2>
 
       {replyStatus === "false" && (
         <>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Adaptamos a análise do conteúdo viral acima para o SEU negócio! Descreva abaixo seu produto/serviço/tema e
             criaremos um roteiro viral personalizado seguindo padrões comprovados de engajamento.
           </p>
@@ -152,9 +152,9 @@ export function VideoGerador({
           </div>
 
           <div className="flex justify-center mt-2">
-            <div className="flex items-center text-sm text-gray-500">
+            <div className="flex items-center text-sm text-muted-foreground">
               <Diamond className="mr-1 h-3 w-3" />
-              <span>1 Token</span>
+              <span>1 Gema por geração</span>
             </div>
           </div>
         </>
@@ -204,7 +204,7 @@ export function VideoGerador({
               history.map((item) => (
                 <div
                   key={item.id} // Usar um ID único para a key
-                  className="p-3 border-b last:border-b-0 cursor-pointer hover:bg-gray-100 mb-2" // Aumentar padding e adicionar margem inferior
+                  className="p-3 border-b last:border-b-0 cursor-pointer hover:bg-muted/50 mb-2" // Aumentar padding e adicionar margem inferior
                   onClick={() => handleSelectHistoryItem(item.content)}
                 >
                   {item.content}

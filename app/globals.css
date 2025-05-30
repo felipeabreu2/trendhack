@@ -42,6 +42,18 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* ---------------------------------------------------- */
+    /* Cores do BGPattern para TEMA CLARO */
+    /* ---------------------------------------------------- */
+    /* Cor das LINHAS do padrão de fundo no TEMA CLARO */
+    /* Use RGBA para controlar a transparência. Ajuste o último valor (opacidade) */
+    --grid-line-color: #e2e2e2; /* #D3D3D3 (cinza claro) com 80% de opacidade */
+
+    /* Cor de fundo da MÁSCARA (sombra) no TEMA CLARO */
+    /* Esta é a cor que vai cobrir o padrão, criando o efeito de "blush" ou "sombra" */
+    /* Use RGBA para controlar a transparência. Ajuste o último valor (opacidade) */
+    --mask-bg-color: #ffffff; /* Branco com 80% de opacidade */
   }
 
   .dark {
@@ -81,6 +93,18 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* ---------------------------------------------------- */
+    /* Cores do BGPattern para TEMA ESCURO */
+    /* ---------------------------------------------------- */
+    /* Cor das LINHAS do padrão de fundo no TEMA ESCURO */
+    /* Use RGBA para controlar a transparência. Ajuste o último valor (opacidade) */
+    --grid-line-color: #081129; /* #555555 (cinza médio) com 50% de opacidade */
+
+    /* Cor de fundo da MÁSCARA (sombra) no TEMA ESCURO */
+    /* Esta é a cor que vai cobrir o padrão, criando o efeito de "blush" ou "sombra" */
+    /* Use RGBA para controlar a transparência. Ajuste o último valor (opacidade) */
+    --mask-bg-color: #020817; /* Preto com 90% de opacidade para uma sombra escura */
   }
 }
 

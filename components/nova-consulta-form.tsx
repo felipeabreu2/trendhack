@@ -159,7 +159,7 @@
     }, [selectedPlatformName, plataformTools, platforms]);
 
     useEffect(() => {
-      console.log("selectedPlatformName changed:", selectedPlatformName);
+      //console.log("selectedPlatformName changed:", selectedPlatformName);
       const platform = platforms.find(p => p.name === selectedPlatformName);
       onPlatformSelect(platform);
       form.setValue("tipo_extracao", "");
@@ -262,15 +262,15 @@
         totalCost = urlValue ? costPerResult : 0;
       }
 
-      console.log("Atualizando resumo:", { // Adicionado para depuração
-        platformName,
-        extractionTypeName,
-        estimatedTime,
-        costPerResult,
-        numberOfProfiles,
-        expectedResultsCount,
-        totalCost,
-      });
+      //console.log("Atualizando resumo:", { // Adicionado para depuração
+      //  platformName,
+      //  extractionTypeName,
+      //  estimatedTime,
+      //  costPerResult,
+      //  numberOfProfiles,
+      //  expectedResultsCount,
+      //  totalCost,
+      //});
 
       onSummaryUpdate({
         platformName,
@@ -501,7 +501,7 @@
                       {platforms.map((platform) => (
                         <div
                           key={platform.name}
-                          className={`flex items-center space-x-2 rounded-full px-4 py-2 border cursor-pointer ${field.value === platform.name ? "bg-purple-100 border-purple-300" : "bg-white"}`}
+                          className={`flex items-center space-x-2 rounded-full px-4 py-2 border cursor-pointer ${field.value === platform.name ? "bg-primary/10 border-primary" : "bg-card border-border"}`}
                         >
                           <RadioGroupItem value={platform.name} id={platform.name} className="sr-only" />
                           {platform.image && (

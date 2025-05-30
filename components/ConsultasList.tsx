@@ -16,33 +16,61 @@ interface Consulta {
     avatars: string[]
   }
   plataforma: string
-  plataformaImage?: string
+  plataformaImage: string; // Adicionar plataformaImage
   tipo_extracao: string
   status: string
   tokens: number
   statusColor: string
 }
 
-interface VideosListProps {
-  videos: any[];
+interface Video {
+  id: string
+  conteudo: {
+    thumbnail: string
+    titulo: string
+    url: string
+  }
+  perfil: {
+    nome: string
+    avatar: string
+    usuario: string
+  }
+  plataforma: string
+  plataformaImage?: string; // Adicionar plataformaImage (opcional)
+  duracao: string
+  visualizacoes: number
+  curtidas: number
+  comentarios: number
+  publicado: string
 }
 
 interface ConsultasListProps {
   consultas: Consulta[]
+  videos: Video[]; // Usar a interface Video
   totalPages?: number
   currentPage?: number
-  videos: VideosListProps['videos']
+  // Remover activeTab daqui
+  // activeTab?: "consultas" | "videos"
+  // Adicionar prop para a aba ativa, gerenciada pelo pai
+  activeTab: "consultas" | "videos"
+  onTabChange: (tab: "consultas" | "videos") => void; // Adicionar callback para mudança de aba
 }
 
-export function ConsultasList({ consultas = [], totalPages = 1, currentPage = 1, videos = [] }: ConsultasListProps) {
+// Remover state activeTab e lógica de handleRowClick baseada no state
+export function ConsultasList({ consultas = [], totalPages = 1, currentPage = 1, videos = [], activeTab, onTabChange }: ConsultasListProps) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<"consultas" | "videos">("consultas")
+  // Remover estado local de activeTab
+  // const [activeTab, setActiveTab] = useState<"consultas" | "videos">("consultas")
 
-  // Se não houver consultas, usamos dados de exemplo
+  // Se não houver consultas/videos (dependendo da aba ativa), usamos dados de exemplo (opcional, manter por enquanto se útil para fallback visual)
   const exampleConsultas: Consulta[] = []
+  const exampleVideos: Video[] = [] // Adicionar exemplo para vídeos
 
-  const displayConsultas = consultas.length > 0 ? consultas : exampleConsultas
+  // Usar os dados passados via prop, com fallback para exemplos se as listas estiverem vazias
+  const displayConsultas = consultas.length > 0 ? consultas : exampleConsultas;
+  const displayVideos = videos.length > 0 ? videos : exampleVideos;
 
+  // Ajustar handleRowClick para usar a prop activeTab
   const handleRowClick = (id: string) => {
     if (activeTab === "consultas") {
       router.push(`/dashboard/consulta/${id}`)
@@ -54,6 +82,7 @@ export function ConsultasList({ consultas = [], totalPages = 1, currentPage = 1,
   return (
     <div className="bg-background rounded-lg shadow overflow-hidden border">
       <div className="p-6">
+        {/* Usar a prop activeTab para o título */}
         <h2 className="text-xl font-semibold mb-4 text-foreground">Histórico de {activeTab === "consultas" ? "consultas" : "vídeos"}</h2>
 
         <div className="flex justify-end mb-4">
@@ -61,20 +90,23 @@ export function ConsultasList({ consultas = [], totalPages = 1, currentPage = 1,
             <Button
               variant="ghost"
               className={`rounded-full ${activeTab === "consultas" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-              onClick={() => setActiveTab("consultas")}
+              // Usar o callback onTabChange
+              onClick={() => onTabChange("consultas")}
             >
               Consultas
             </Button>
             <Button
               variant="ghost"
               className={`rounded-full ${activeTab === "videos" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-              onClick={() => setActiveTab("videos")}
+              // Usar o callback onTabChange
+              onClick={() => onTabChange("videos")}
             >
               Vídeos
             </Button>
           </div>
         </div>
 
+        {/* Renderizar condicionalmente com base na prop activeTab */}
         {activeTab === "consultas" && (
           <div className="overflow-x-auto">
             <Table>
@@ -123,11 +155,12 @@ export function ConsultasList({ consultas = [], totalPages = 1, currentPage = 1,
                     </TableCell>
                     <TableCell className="text-foreground">
                       <div className="flex items-center gap-2">
-                        <img
-                          src={consulta.plataformaImage || "/placeholder.svg"}
-                          alt={consulta.plataforma}
-                          className="w-4 h-4"
-                        />
+                        {/* Usar a imagem da plataforma se disponível, fallback para ícone */}
+                        {consulta.plataformaImage ? (
+                           <img src={consulta.plataformaImage} alt={consulta.plataforma} className="w-4 h-4" />
+                        ) : (
+                          <Globe className="w-4 h-4 text-muted-foreground" />
+                        )}
                         <span>{consulta.plataforma}</span>
                       </div>
                     </TableCell>
@@ -146,7 +179,7 @@ export function ConsultasList({ consultas = [], totalPages = 1, currentPage = 1,
                          consulta.statusColor === 'green' ? 'bg-green-500 text-white dark:bg-green-700' : // Verde para Concluída
                          'bg-gray-500 text-white dark:bg-gray-700'} // Cinza para Desconhecido/Nenhum Conteúdo
                         hover:opacity-80
-                        `}
+                        `} 
                       >
                         {consulta.status}
                       </Badge>
@@ -160,26 +193,29 @@ export function ConsultasList({ consultas = [], totalPages = 1, currentPage = 1,
         )}
 
         {activeTab === "videos" && (
-          <VideosList videos={videos} />
+          <VideosList videos={displayVideos} />
         )}
 
         {/* Paginação (exibir para ambas as abas) */}
-        {totalPages > 1 && (
+        {totalPages > 1 && ( // Exibir paginação apenas se houver mais de uma página
           <div className="flex justify-center mt-6 gap-2">
             <Button
               variant="outline"
               size="sm"
               disabled={currentPage <= 1}
+              // A ação de mudança de página já está no DashboardRealtimeWrapper via router.push
               onClick={() => router.push(`?page=${currentPage - 1}`)}
               className="text-foreground border-border hover:bg-muted"
             >
               Anterior
             </Button>
+            {/* Renderização dos botões de página */}
             {Array.from({ length: totalPages }, (_, i) => (
               <Button
                 key={i + 1}
                 variant={currentPage === i + 1 ? "default" : "outline"}
                 size="sm"
+                // A ação de mudança de página já está no DashboardRealtimeWrapper via router.push
                 onClick={() => router.push(`?page=${i + 1}`)}
                 className={currentPage === i + 1 ? "" : "text-foreground border-border hover:bg-muted"}
               >
@@ -190,6 +226,7 @@ export function ConsultasList({ consultas = [], totalPages = 1, currentPage = 1,
               variant="outline"
               size="sm"
               disabled={currentPage >= totalPages}
+              // A ação de mudança de página já está no DashboardRealtimeWrapper via router.push
               onClick={() => router.push(`?page=${currentPage + 1}`)}
               className="text-foreground border-border hover:bg-muted"
             >
@@ -200,4 +237,4 @@ export function ConsultasList({ consultas = [], totalPages = 1, currentPage = 1,
       </div>
     </div>
   )
-}
+} 

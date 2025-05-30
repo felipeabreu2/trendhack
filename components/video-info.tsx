@@ -7,18 +7,18 @@ interface VideoInfoProps {
 
 export function VideoInfo({ video }: VideoInfoProps) {
   return (
-    <div className="bg-white rounded-lg p-6 shadow">
-      <h2 className="text-xl font-semibold mb-4">Informações</h2>
+    <div className="bg-card rounded-lg p-6 shadow border">
+      <h2 className="text-xl font-semibold mb-4 text-foreground">Informações</h2>
 
       <div className="space-y-4">
         <div>
-          <p className="text-sm text-gray-500">Publicado:</p>
-          <p>{video.published_at ? new Date(video.published_at).toLocaleString("pt-BR") : ""}</p>
+          <p className="text-sm text-muted-foreground">Publicado:</p>
+          <p className="text-foreground">{video.published_at ? new Date(video.published_at).toLocaleString("pt-BR") : ""}</p>
         </div>
 
         <div>
-          <p className="text-sm text-gray-500">Descrição:</p>
-          <p className="text-sm">{video.caption || ""}</p>
+          <p className="text-sm text-muted-foreground">Descrição:</p>
+          <p className="text-sm text-foreground">{video.caption || ""}</p>
 
           <div className="mt-2 space-y-1 text-sm">
 
@@ -26,8 +26,8 @@ export function VideoInfo({ video }: VideoInfoProps) {
         </div>
 
         <div>
-          <p className="text-sm text-gray-500">Hashtags:</p>
-          <p>Nenhuma hashtag</p>
+          <p className="text-sm text-muted-foreground">Hashtags:</p>
+          <p className="text-foreground">Nenhuma hashtag</p>
         </div>
       </div>
     </div>

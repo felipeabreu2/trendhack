@@ -44,12 +44,23 @@ export default async function DashboardPage({ searchParams = {} }: { searchParam
     .range(from, to)
 
   // Buscar métricas do usuário na view view_user_metrics
-  // REMOVER: A busca de métricas agora é feita em DashboardRealtimeWrapper
-  // const { data: metrics } = await supabase
-  //   .from("view_user_metrics")
-  //   .select("*")
-  //   .eq("user", user.id)
-  //   .single()
+  const { data: metrics, error: metricsError } = await supabase
+     .from("view_user_metrics")
+     .select("*")
+     .eq("user", user.id)
+     .single()
+
+  if (metricsError) {
+    console.error("Erro ao buscar métricas iniciais:", metricsError);
+    // Tratar erro, talvez passar métricas como null ou com valores padrão
+  }
+
+  const initialStats = { // Criar objeto de métricas iniciais
+    consultas_concluidas: metrics?.request_complete ?? 0,
+    consultas_pendentes: metrics?.request_pending ?? 0,
+    gemas_usadas: metrics?.gemas_spent ?? 0,
+    gemas_restantes: metrics?.gemas_available ?? 0,
+  };
 
   // Buscar ids de plataformas e tipos
   const plataformaIds = userRequests?.map(r => r.type?.plataform).filter(Boolean) ?? []
@@ -102,7 +113,7 @@ export default async function DashboardPage({ searchParams = {} }: { searchParam
   const totalPages = totalCount ? Math.ceil(totalCount / pageSize) : 1
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       <DashboardHeader />
       {/* REMOVER: DashboardCards agora é renderizado dentro de DashboardRealtimeWrapper */}
       {/* <DashboardCards
@@ -114,7 +125,7 @@ export default async function DashboardPage({ searchParams = {} }: { searchParam
         }}
       /> */}
       {/* Passar consultas, totalPages e currentPage para o wrapper */}
-      <DashboardRealtimeWrapper userId={user.id} initialSearchParams={awaitedSearchParams} consultations={consultas} totalPages={totalPages} currentPage={currentPage}/>
+      <DashboardRealtimeWrapper userId={user.id} initialSearchParams={awaitedSearchParams} consultations={consultas} totalPages={totalPages} currentPage={currentPage} initialStats={initialStats}/>
     </div>
   )
 }

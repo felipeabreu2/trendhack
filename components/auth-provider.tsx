@@ -35,100 +35,100 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [supabaseInitialized, setSupabaseInitialized] = useState(true)
   const router = useRouter()
 
+  // console.log("AuthProvider: Componente montado.");
+
   useEffect(() => {
+    // console.log("AuthProvider: useEffect disparado.");
     const getSession = async () => {
+      // console.log("AuthProvider: getSession chamada.");
       try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession()
+        const { data: { session }, error } = await supabase.auth.getSession()
 
         if (error) {
-          console.error("AuthProvider: Erro ao obter sessão:", error.message)
+          // console.error("AuthProvider: Erro ao obter sessão:", error.message)
           setSupabaseInitialized(false)
         } else {
+          // console.log("AuthProvider: Sessão obtida com sucesso:", session);
           setSession(session)
           setUser(session?.user ?? null)
           setSupabaseInitialized(true)
         }
 
-        console.log("AuthProvider: getSession finalizado, isLoading = false")
+        // console.log("AuthProvider: getSession finalizado, isLoading = false")
         setIsLoading(false)
       } catch (error) {
-        console.error("AuthProvider: Erro ao inicializar Supabase ou obter sessão:", error)
+        // console.error("AuthProvider: Erro ao inicializar Supabase ou obter sessão:", error)
         setSupabaseInitialized(false)
-        console.log("AuthProvider: getSession com erro, isLoading = false")
+        // console.log("AuthProvider: getSession com erro, isLoading = false")
         setIsLoading(false)
       }
     }
 
-    console.log("AuthProvider: Iniciando getSession")
+    // console.log("AuthProvider: Iniciando getSession")
     getSession()
 
     // Configurar o listener de mudanças de autenticação
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event: string, session: Session | null) => {
-      console.log("AuthProvider: onAuthStateChange disparado, evento:", event)
-      
+    const { data: { subscription }, } = supabase.auth.onAuthStateChange((event: string, session: Session | null) => {
+      // console.log("AuthProvider: onAuthStateChange disparado, evento:", event, "sessão:", session)
+
       // Atualizar o estado baseado no evento
       if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
         setSession(session)
         setUser(session?.user ?? null)
         setIsLoading(false)
-        
+
         // Se foi um logout, redirecionar para login
         if (event === 'SIGNED_OUT') {
-          console.log("AuthProvider: Usuário deslogado, redirecionando para /login")
+          // console.log("AuthProvider: Usuário deslogado, redirecionando para /login")
           router.push("/login")
         }
       }
-      
-      console.log("AuthProvider: onAuthStateChange finalizado")
+
+      // console.log("AuthProvider: onAuthStateChange finalizado")
     })
 
     // Limpar o listener quando o componente for desmontado
     return () => {
-      console.log("AuthProvider: Limpando assinatura de autenticação")
+      // console.log("AuthProvider: Limpando assinatura de autenticação")
       subscription.unsubscribe()
     }
   }, [router])
 
   const signOut = async () => {
-    console.log("AuthProvider: >>> Entrando na função signOut")
-    
+    // console.log("AuthProvider: >>> Entrando na função signOut")
+
     try {
       // Definir loading como true durante o processo de logout
       setIsLoading(true)
-      
-      console.log("AuthProvider: >>> Tentando logout com supabase.auth.signOut()")
-      
+
+      // console.log("AuthProvider: >>> Tentando logout com supabase.auth.signOut()")
+
       // Fazer logout do Supabase
       const { error } = await supabase.auth.signOut({
         scope: 'local' // Remove apenas a sessão local
       })
-      
-      console.log("AuthProvider: <<< Retornou de supabase.auth.signOut()")
+
+      // console.log("AuthProvider: <<< Retornou de supabase.auth.signOut()")
 
       if (error) {
-        console.error("AuthProvider: Erro ao fazer logout do Supabase:", error)
-        
+        // console.error("AuthProvider: Erro ao fazer logout do Supabase:", error)
+
         // Forçar limpeza do estado mesmo com erro
         setUser(null)
         setSession(null)
         setIsLoading(false)
-        
+
         toast({
           title: "Aviso",
           description: "Sessão limpa localmente. Redirecionando...",
           variant: "default",
         })
-        
+
         // Redirecionar mesmo com erro
         router.push("/login")
       } else {
-        console.log("AuthProvider: Logout do Supabase bem-sucedido")
-        
+        // console.log("AuthProvider: Logout do Supabase bem-sucedido")
+
         // O onAuthStateChange vai lidar com a limpeza do estado e redirecionamento
         toast({
           title: "Logout realizado",
@@ -137,19 +137,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
     } catch (error) {
-      console.error("AuthProvider: Erro inesperado durante o logout:", error)
-      
+      // console.error("AuthProvider: Erro inesperado durante o logout:", error)
+
       // Forçar limpeza em caso de erro inesperado
       setUser(null)
       setSession(null)
       setIsLoading(false)
-      
+
       toast({
         title: "Erro ao fazer logout",
         description: "Erro inesperado, mas sessão foi limpa.",
         variant: "destructive",
       })
-      
+
       // Redirecionar mesmo com erro
       router.push("/login")
     }

@@ -12,7 +12,7 @@ interface DashboardCardsProps {
 export function DashboardCards({ stats }: DashboardCardsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div className="bg-white rounded-lg p-6 shadow">
+      <div className="bg-white rounded-lg p-6 shadow-md">
         <div className="flex justify-between items-start">
           <div>
             <p className="text-gray-500 mb-1">Consultas Concluídas</p>
@@ -24,7 +24,7 @@ export function DashboardCards({ stats }: DashboardCardsProps) {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg p-6 shadow">
+      <div className="bg-white rounded-lg p-6 shadow-md">
         <div className="flex justify-between items-start">
           <div>
             <p className="text-gray-500 mb-1">Consultas Pendentes</p>
@@ -36,7 +36,7 @@ export function DashboardCards({ stats }: DashboardCardsProps) {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg p-6 shadow">
+      <div className="bg-white rounded-lg p-6 shadow-md">
         <div className="flex justify-between items-start">
           <div>
             <p className="text-gray-500 mb-1">Tokens Usados</p>
@@ -48,7 +48,7 @@ export function DashboardCards({ stats }: DashboardCardsProps) {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg p-6 shadow">
+      <div className="bg-white rounded-lg p-6 shadow-md">
         <div className="flex justify-between items-start">
           <div>
             <p className="text-gray-500 mb-1">Tokens Restante</p>

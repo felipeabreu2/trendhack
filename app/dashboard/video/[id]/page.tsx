@@ -103,8 +103,8 @@ export default async function VideoPage({
           </div>
         </div>
         <div className="flex-shrink-0 flex flex-col items-end h-full">
-          <div className="bg-white rounded-lg p-4 shadow w-full max-w-xs h-full flex flex-col">
-            <h2 className="text-xl font-semibold mb-4 text-left w-full">Conteúdo</h2>
+          <div className="bg-card rounded-lg p-4 shadow w-full max-w-xs h-full flex flex-col border">
+            <h2 className="text-xl font-semibold mb-4 text-left w-full text-foreground">Conteúdo</h2>
             <div className="flex-1 flex items-center justify-center">
               {video.url ? (
                 <video
@@ -117,7 +117,7 @@ export default async function VideoPage({
                   Seu navegador não suporta o elemento de vídeo.
                 </video>
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-500 bg-gray-200 rounded-lg">
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-muted rounded-lg">
                   Prévia não disponível
                 </div>
               )}

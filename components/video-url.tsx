@@ -21,12 +21,12 @@ export function VideoUrl({ url }: VideoUrlProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow">
-      <h2 className="text-xl font-semibold mb-4">URL do Conteúdo</h2>
+    <div className="bg-card rounded-lg p-6 shadow border">
+      <h2 className="text-xl font-semibold mb-4 text-foreground">URL do Conteúdo</h2>
 
       <div className="flex">
-        <Input value={url} readOnly className="rounded-r-none" />
-        <Button variant="outline" className="rounded-l-none border-l-0" onClick={handleCopy}>
+        <Input value={url} readOnly className="rounded-r-none text-foreground" />
+        <Button variant="outline" className="rounded-l-none border-l-0 text-foreground border-border hover:bg-muted hover:text-foreground" onClick={handleCopy}>
           <Copy className="h-4 w-4" />
           <span className="ml-2">Copiar</span>
         </Button>

@@ -21,11 +21,11 @@ export function VideoPerfil({ perfil }: VideoPerfilProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow">
-      <h2 className="text-xl font-semibold mb-4">Perfil</h2>
+    <div className="bg-card rounded-lg p-6 shadow border">
+      <h2 className="text-xl font-semibold mb-4 text-foreground">Perfil</h2>
 
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
           <img
             src={perfil.avatar || "/placeholder.svg?height=64&width=64"}
             alt={perfil.nome}
@@ -34,24 +34,24 @@ export function VideoPerfil({ perfil }: VideoPerfilProps) {
         </div>
 
         <div>
-          <h3 className="font-semibold">{perfil.nome}</h3>
-          <p className="text-gray-500">{perfil.usuario}</p>
+          <h3 className="font-semibold text-foreground">{perfil.nome}</h3>
+          <p className="text-muted-foreground">{perfil.usuario}</p>
         </div>
 
         <div className="ml-auto grid grid-cols-2 gap-4">
           <div>
-            <p className="text-gray-500 text-sm">Plataforma</p>
-            <p>{perfil.plataforma}</p>
+            <p className="text-muted-foreground text-sm">Plataforma</p>
+            <p className="text-foreground">{perfil.plataforma}</p>
           </div>
 
           <div>
-            <p className="text-gray-500 text-sm">Seguidores</p>
-            <p>{formatNumber(perfil.seguidores)}</p>
+            <p className="text-muted-foreground text-sm">Seguidores</p>
+            <p className="text-foreground">{formatNumber(perfil.seguidores)}</p>
           </div>
 
           <div>
-            <p className="text-gray-500 text-sm">Seguindo</p>
-            <p>{formatNumber(perfil.seguindo)}</p>
+            <p className="text-muted-foreground text-sm">Seguindo</p>
+            <p className="text-foreground">{formatNumber(perfil.seguindo)}</p>
           </div>
         </div>
       </div>
